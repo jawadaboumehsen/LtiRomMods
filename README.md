@@ -1,0 +1,36 @@
+# LtiRom mods
+
+LtiRom's own patches and mods, written with the patch-mod Kotlin SDK. Nothing here is part of the app: each mod
+is packaged as a `.lti-mod.zip` and installed on LtiRom Studio's Plugins page, like any third-party mod.
+
+## Build
+
+1. In `../LtiRomGui`: `./gradlew publishSdkToMavenLocal` (the SDK, `org.ide.lti:patch-mod-sdk:1.0.0-SNAPSHOT`).
+2. Here: `./gradlew packageMods` writes `build/mods/io.ltirom-<id>-<version>.lti-mod.zip`, one per mod.
+
+## Check against a firmware (no build)
+
+`./gradlew checkMods -Pdecoded=<dir>` applies every mod's APK/JAR edits, in order and in memory, to the firmware's
+components decoded with `apktool d` into `<dir>/<component file name>/` (`framework.jar`, `services.jar`, …). It uses
+the same engine as a build and lists each edit as `ok` or why it does not apply. PQ84P01's stock decode is in WSL:
+`gradlew.bat checkMods "-Pdecoded=\\wsl.localhost\Ubuntu\home\lti\ltimods-stock\dec"` (about 2 minutes; run it from
+PowerShell or cmd, since Git Bash rewrites the path).
+
+## Layout
+
+- `src/main/kotlin/io/ltirom/mods/` — the mods: `Patches.kt` (adb, property-overrides, selinux, logpersist, miscs,
+  signature), `Mods.kt` (hma, keybox, nubia-gameassist, pif, prophide, settings, updater), `Main.kt` (packaging).
+- `src/main/kotlin/io/ltirom/mods/changes/` — each mod's smali and resource changes, as DSL calls.
+  - Smali: `method("Lcom/x/Foo;", "name") { replace(…); insertAfter(…); insertBefore(…) }`. The class is found in
+    whichever `smali*` folder holds it, and the method by its name (or `name(params)return` for overloads). Each anchor
+    must occur once in that method, compared as trimmed lines with blank and `.line` lines ignored, so the rest of
+    the class can change between firmwares. `@{name}` in an anchor matches any register, and the same `@{name}` in
+    inserted code is written as that register (see the pif hooks).
+  - Resources: `xml("res/values/strings.xml") { append(…) }`, `insertAfter(element(null, "android:key" to "x"), …)`,
+    `replace(element("intent", "android:action" to …), …)`. The file is edited as a document; an appended resource
+    whose name or public id already exists is refused.
+  - Classes a mod adds itself: `change(member) { … }`, exact text unique in the file.
+- Every mod is made with `ltiMod(id)` (`Main.kt`), which declares `compatibleWith(DEVICE)`: a workspace for
+  another device refuses it before its build changes anything.
+- `files/<mod>/<component>/…` — new smali classes and resource files a mod adds (`addFile`).
+- `assets/<mod>/…` — files copied into the ROM (apps, scripts, binaries).
