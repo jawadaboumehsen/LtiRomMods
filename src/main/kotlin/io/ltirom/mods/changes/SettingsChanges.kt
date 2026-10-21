@@ -1,5 +1,6 @@
 package io.ltirom.mods.changes
 
+import io.ltirom.mods.addHooks
 import io.ltirom.mods.text
 import org.ide.lti.sdk.patchmod.ApkJarScope
 import org.ide.lti.sdk.patchmod.element
@@ -47,9 +48,7 @@ internal fun ApkJarScope.settingsFramework(files: File) {
             """.trimMargin(),
         )
     }
-    addFile("smali_classes6/io/lti/HideDevStatusUtils.smali", files.text("settings/framework.jar/smali_classes6/io/lti/HideDevStatusUtils.smali"))
-    addFile("smali_classes6/io/lti/LtiSettingsUtils.smali", files.text("settings/framework.jar/smali_classes6/io/lti/LtiSettingsUtils.smali"))
-    addFile("smali_classes6/io/lti/GPhotosUtils.smali", files.text("settings/framework.jar/smali_classes6/io/lti/GPhotosUtils.smali"))
+    addHooks(files, "settings/framework.jar")
     method("Landroid/app/ApplicationPackageManager;", "hasSystemFeature(Ljava/lang/String;I)Z") {
         insertAfter(
             """

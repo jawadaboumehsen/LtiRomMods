@@ -1,6 +1,6 @@
 package io.ltirom.mods.changes
 
-import io.ltirom.mods.text
+import io.ltirom.mods.addHooks
 import org.ide.lti.sdk.patchmod.ApkJarScope
 import java.io.File
 
@@ -398,20 +398,5 @@ internal fun ApkJarScope.keyboxFramework(files: File) {
             """.trimMargin(),
         )
     }
-    addFile("smali_classes6/io/lti/IKeyboxProvider.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/IKeyboxProvider.smali"))
-    addFile("smali_classes6/io/lti/KeyProviderManager${'$'}DefaultKeyboxProvider$${'$'}ExternalSyntheticLambda0.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyProviderManager${'$'}DefaultKeyboxProvider$${'$'}ExternalSyntheticLambda0.smali"))
-    addFile("smali_classes6/io/lti/KeyProviderManager${'$'}DefaultKeyboxProvider.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyProviderManager${'$'}DefaultKeyboxProvider.smali"))
-    addFile("smali_classes6/io/lti/KeyProviderManager-IA.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyProviderManager-IA.smali"))
-    addFile("smali_classes6/io/lti/KeyProviderManager.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyProviderManager.smali"))
-    addFile("smali_classes6/io/lti/KeyboxChainGenerator${'$'}Digest.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxChainGenerator${'$'}Digest.smali"))
-    addFile("smali_classes6/io/lti/KeyboxChainGenerator${'$'}KeyGenParameters.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxChainGenerator${'$'}KeyGenParameters.smali"))
-    addFile("smali_classes6/io/lti/KeyboxChainGenerator.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxChainGenerator.smali"))
-    addFile("smali_classes6/io/lti/KeyboxDbHelper.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxDbHelper.smali"))
-    addFile("smali_classes6/io/lti/KeyboxImitationHooks.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxImitationHooks.smali"))
-    addFile("smali_classes6/io/lti/KeyboxOperationUtils${'$'}DecryptOperation.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxOperationUtils${'$'}DecryptOperation.smali"))
-    addFile("smali_classes6/io/lti/KeyboxOperationUtils${'$'}KeyAgreementOperation.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxOperationUtils${'$'}KeyAgreementOperation.smali"))
-    addFile("smali_classes6/io/lti/KeyboxOperationUtils${'$'}SignOperation.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxOperationUtils${'$'}SignOperation.smali"))
-    addFile("smali_classes6/io/lti/KeyboxOperationUtils.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxOperationUtils.smali"))
-    addFile("smali_classes6/io/lti/KeyboxUtils$${'$'}ExternalSyntheticLambda0.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxUtils$${'$'}ExternalSyntheticLambda0.smali"))
-    addFile("smali_classes6/io/lti/KeyboxUtils.smali", files.text("keybox/framework.jar/smali_classes6/io/lti/KeyboxUtils.smali"))
+    addHooks(files, "keybox/framework.jar")
 }

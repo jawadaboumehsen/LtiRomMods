@@ -1,6 +1,6 @@
 package io.ltirom.mods.changes
 
-import io.ltirom.mods.text
+import io.ltirom.mods.addHooks
 import org.ide.lti.sdk.patchmod.ApkJarScope
 import java.io.File
 
@@ -20,5 +20,5 @@ internal fun ApkJarScope.signatureServices(files: File) {
             """.trimMargin(),
         )
     }
-    addFile("smali_classes2/io/lti/CustomSignatureHelper.smali", files.text("signature/services.jar/smali_classes2/io/lti/CustomSignatureHelper.smali"))
+    addHooks(files, "signature/services.jar")
 }

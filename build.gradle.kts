@@ -10,6 +10,7 @@ kotlin {
 
 dependencies {
     implementation("org.ide.lti:patch-mod-sdk:1.0.0-SNAPSHOT")
+    implementation("org.ide.lti:patch-mod-hooks:1.0.0-SNAPSHOT")
 }
 
 tasks.register<JavaExec>("packageMods") {
@@ -29,4 +30,21 @@ tasks.register<JavaExec>("checkMods") {
     mainClass.set("io.ltirom.mods.MainKt")
     val decoded = providers.gradleProperty("decoded")
     argumentProviders.add(CommandLineArgumentProvider { listOf("check", projectDir.absolutePath, decoded.get()) })
+}
+
+// `./gradlew compileHooks -Pfirmware=<dir>`: compiles the Java hook classes under hooks/<mod>/<component>/<smali dir>/
+// into files/ (the smali the mods add), against the firmware's own <dir>/<component> files (framework.jar, …).
+tasks.register<JavaExec>("compileHooks") {
+    group = "mods"
+    description = "Compiles hooks/**/*.java into files/**/*.smali against a firmware (-Pfirmware=<dir>)"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("io.ltirom.mods.MainKt")
+    val firmware = providers.gradleProperty("firmware")
+    // The SDK's android.jar (org.xmlpull and other libraries a firmware keeps outside framework.jar).
+    val androidJar = providers.gradleProperty("androidJar")
+    argumentProviders.add(
+        CommandLineArgumentProvider {
+            listOfNotNull("hooks", projectDir.absolutePath, firmware.get(), androidJar.orNull)
+        },
+    )
 }

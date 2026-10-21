@@ -1,6 +1,6 @@
 package io.ltirom.mods.changes
 
-import io.ltirom.mods.text
+import io.ltirom.mods.addHooks
 import org.ide.lti.sdk.patchmod.ApkJarScope
 import org.ide.lti.sdk.patchmod.element
 import java.io.File
@@ -26,7 +26,7 @@ internal fun ApkJarScope.updaterSettingsApk(files: File) {
             """.trimMargin(),
         )
     }
-    addFile("smali/io/lti/updater/settings/UpdaterPreferenceController.smali", files.text("updater/Settings_MFV_abroad_tablet.apk/smali/io/lti/updater/settings/UpdaterPreferenceController.smali"))
+    addHooks(files, "updater/Settings_MFV_abroad_tablet.apk")
     method("Lcom/android/settings/system/SystemUpdateRepository;", "getSystemUpdateIntent") {
         replace(
             """

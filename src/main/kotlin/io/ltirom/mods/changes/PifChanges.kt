@@ -1,6 +1,6 @@
 package io.ltirom.mods.changes
 
-import io.ltirom.mods.text
+import io.ltirom.mods.addHooks
 import org.ide.lti.sdk.patchmod.ApkJarScope
 import java.io.File
 
@@ -45,9 +45,7 @@ internal fun ApkJarScope.pifFramework(files: File) {
             """.trimMargin(),
         )
     }
-    addFile("smali_classes6/io/lti/PlayIntegrityHooks$${'$'}ExternalSyntheticLambda0.smali", files.text("pif/framework.jar/smali_classes6/io/lti/PlayIntegrityHooks$${'$'}ExternalSyntheticLambda0.smali"))
-    addFile("smali_classes6/io/lti/PlayIntegrityHooks$1.smali", files.text("pif/framework.jar/smali_classes6/io/lti/PlayIntegrityHooks$1.smali"))
-    addFile("smali_classes6/io/lti/PlayIntegrityHooks.smali", files.text("pif/framework.jar/smali_classes6/io/lti/PlayIntegrityHooks.smali"))
+    addHooks(files, "pif/framework.jar")
 }
 
 /** pif: its changes to services.jar. */

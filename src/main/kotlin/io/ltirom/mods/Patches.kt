@@ -9,7 +9,7 @@ import org.ide.lti.sdk.patchmod.literal
 import org.ide.lti.sdk.patchmod.Partition
 import java.io.File
 
-const val VERSION: String = "1.3.0"
+const val VERSION: String = "1.4.0"
 
 // Paths inside work/<partition>/; system is system-as-root, so its files are under "system/".
 private const val SYSTEM_PROP = "system/build.prop"

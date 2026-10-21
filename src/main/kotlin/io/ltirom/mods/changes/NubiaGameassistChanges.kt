@@ -1,6 +1,5 @@
 package io.ltirom.mods.changes
 
-import io.ltirom.mods.text
 import org.ide.lti.sdk.patchmod.ApkJarScope
 import java.io.File
 

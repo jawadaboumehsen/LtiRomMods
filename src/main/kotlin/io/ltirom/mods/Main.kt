@@ -3,9 +3,11 @@ package io.ltirom.mods
 import org.ide.lti.core.model.plugin.DependencyRef
 import org.ide.lti.core.model.plugin.PluginManifest
 import org.ide.lti.core.model.plugin.PluginPlanTemplate
+import org.ide.lti.sdk.patchmod.ApkJarScope
 import org.ide.lti.sdk.patchmod.ModCheck
 import org.ide.lti.sdk.patchmod.PackageWriter
 import org.ide.lti.sdk.patchmod.RomModScope
+import org.ide.lti.sdk.patchmod.hooks.HookCompiler
 import org.ide.lti.sdk.patchmod.romMod
 import java.io.File
 import kotlin.system.exitProcess
@@ -31,6 +33,16 @@ fun ltiMod(id: String, block: RomModScope.() -> Unit): PluginPlanTemplate = romM
 /** A source file of the project, under `files/` (new smali classes, added resources). */
 fun File.text(path: String): String = resolve(path).readText()
 
+/**
+ * Adds every hook class compiled into `files/<modComponent>/` (its `smali…` folders) to the component. The classes are written
+ * in Java under `hooks/<modComponent>/` and compiled by `./gradlew compileHooks`; the smali is never edited by hand.
+ */
+fun ApkJarScope.addHooks(files: File, modComponent: String) {
+    val root = File(files, modComponent)
+    root.walkTopDown().filter { it.isFile && it.extension == "smali" }.sortedBy { it.invariantSeparatorsPath }
+        .forEach { addFile(it.relativeTo(root).invariantSeparatorsPath, it.readText()) }
+}
+
 /** Every mod, in the order they are meant to apply. */
 fun mods(project: File): List<Mod> {
     val files = File(project, "files")
@@ -54,9 +66,12 @@ fun mods(project: File): List<Mod> {
 /**
  * `packageMods <project dir> <out dir>`: writes `<out>/<publisher>-<id>-<version>.lti-mod.zip` per mod.
  * `check <project dir> <decoded dir>`: [ModCheck] of every mod, in order, against a decoded firmware.
+ * `hooks <project dir> <firmware dir> [android.jar]`: compiles the `.java` files under `hooks/<mod>/<component>/<smali dir>` into the same
+ * folders under `files/`, against the firmware's own `<firmware dir>/<component>` files.
  */
 fun main(args: Array<String>) {
     if (args.firstOrNull() == "check") return check(File(args[1]), File(args[2]))
+    if (args.firstOrNull() == "hooks") return hooks(File(args[1]), File(args[2]), args.getOrNull(3)?.let(::File))
     val project = File(args[0])
     val out = File(args[1]).apply { mkdirs() }
     mods(project).forEach { mod ->
@@ -91,4 +106,22 @@ private fun check(project: File, decoded: File) {
     val failed = checks.count { it.failure != null }
     println(if (failed == 0) "All ${checks.size} edits apply" else "$failed of ${checks.size} edits do not apply")
     if (failed > 0) exitProcess(1)
+}
+
+/** [androidJar]: the SDK's android.jar, for libraries the firmware keeps outside its framework (org.xmlpull). */
+private fun hooks(project: File, firmware: File, androidJar: File?) {
+    val hooks = File(project, "hooks")
+    // hooks/<mod>/<component>/<smali dir>: three levels down.
+    val roots = hooks.listFiles().orEmpty().flatMap { it.listFiles().orEmpty().toList() }
+        .flatMap { it.listFiles().orEmpty().toList() }.filter { it.isDirectory }
+        .map { HookCompiler.Root(it, File(project, "files/" + it.relativeTo(hooks).invariantSeparatorsPath)) }
+    val components = roots.map { it.sources.parentFile.name }.distinct()
+    val firmwareFiles = components.map { File(firmware, it) }.filter { it.isFile }
+    // Hooks for an app also use the framework's classes.
+    val classpath = (firmwareFiles + File(firmware, "framework.jar") + listOfNotNull(androidJar))
+        .filter { it.isFile }.distinct()
+    val problems = HookCompiler.compile(roots, classpath, File(project, "build/hooks"))
+    problems.forEach { System.err.println("ERROR $it") }
+    if (problems.isNotEmpty()) exitProcess(1)
+    println("Compiled ${roots.size} hook folder(s) against ${classpath.map { it.name }}")
 }
