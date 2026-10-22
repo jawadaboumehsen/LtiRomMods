@@ -10,11 +10,19 @@ is packaged as a `.lti-mod.zip` and installed on LtiRom Studio's Plugins page, l
 
 ## Check against a firmware (no build)
 
-`./gradlew checkMods -Pdecoded=<dir>` applies every mod's APK/JAR edits, in order and in memory, to the firmware's
-components decoded with `apktool d` into `<dir>/<component file name>/` (`framework.jar`, `services.jar`, …). It uses
-the same engine as a build and lists each edit as `ok` or why it does not apply. PQ84P01's stock decode is in WSL:
-`gradlew.bat checkMods "-Pdecoded=\\wsl.localhost\Ubuntu\home\lti\ltimods-stock\dec"` (about 2 minutes; run it from
-PowerShell or cmd, since Git Bash rewrites the path).
+`./gradlew checkMods -Pdecoded=<dir> [-Ptree=<work dir>]` applies every mod's edits, in order and in memory, without
+building:
+- APK/JAR edits go to the firmware's components decoded with `apktool d` into `<dir>/<component file name>/`
+  (`framework.jar`, `services.jar`, …);
+- file operations (copy, replace, delete, property and text patches: `build.prop`, sepolicy, scripts, apps) go to an
+  assembled work tree, a folder per partition. Get a stock one by running the Studio through Assemble: the
+  workspace's `work/` is then stock again (after a Patches run it is already patched, and the anchors will not match).
+  Without `-Ptree` those operations are listed as `skip`.
+
+It uses the same engines as a build and lists each edit as `ok` or why it does not apply. PQ84P01's stock decode is
+in WSL; the work tree is the workspace's `work/` folder:
+`gradlew.bat checkMods "-Pdecoded=\\wsl.localhost\Ubuntu\home\lti\ltimods-stock\dec" "-Ptree=\\wsl.localhost\Ubuntu\home\lti\LtiRomWorkDir\workspaces\fw-baseline\work"`
+(about 2 minutes, 125 edits; run it from PowerShell or cmd, since Git Bash rewrites the path).
 
 ## Hooks (Java)
 

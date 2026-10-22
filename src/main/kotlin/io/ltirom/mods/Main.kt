@@ -65,12 +65,14 @@ fun mods(project: File): List<Mod> {
 
 /**
  * `packageMods <project dir> <out dir>`: writes `<out>/<publisher>-<id>-<version>.lti-mod.zip` per mod.
- * `check <project dir> <decoded dir>`: [ModCheck] of every mod, in order, against a decoded firmware.
- * `hooks <project dir> <firmware dir> [android.jar]`: compiles the `.java` files under `hooks/<mod>/<component>/<smali dir>` into the same
- * folders under `files/`, against the firmware's own `<firmware dir>/<component>` files.
+ * `check <project dir> <decoded dir> [work tree]`: [ModCheck] of every mod, in order: APK/JAR edits against a
+ * decoded firmware, file operations against an assembled work tree (skipped without one).
+ * `hooks <project dir> <firmware dir> [android.jar]`: compiles the `.java` files under
+ * `hooks/<mod>/<component>/<smali dir>` into the same folders under `files/`, against the firmware's own
+ * `<firmware dir>/<component>` files.
  */
 fun main(args: Array<String>) {
-    if (args.firstOrNull() == "check") return check(File(args[1]), File(args[2]))
+    if (args.firstOrNull() == "check") return check(File(args[1]), File(args[2]), args.getOrNull(3)?.let(::File))
     if (args.firstOrNull() == "hooks") return hooks(File(args[1]), File(args[2]), args.getOrNull(3)?.let(::File))
     val project = File(args[0])
     val out = File(args[1]).apply { mkdirs() }
@@ -98,13 +100,24 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun check(project: File, decoded: File) {
-    val checks = ModCheck.check(mods(project).map { it.template }) { target ->
-        File(decoded, target.relativePath.substringAfterLast('/')).takeIf { it.isDirectory }
+private fun check(project: File, decoded: File, tree: File?) {
+    val all = mods(project)
+    val checks = ModCheck.check(
+        all.map { it.template },
+        tree = tree,
+        assetExists = { template, asset ->
+            all.first { it.template.id == template.id }.assets[asset.path]?.let { File(project, it).isFile } == true
+        },
+        decoded = { target -> File(decoded, target.relativePath.substringAfterLast('/')).takeIf { it.isDirectory } },
+    )
+    checks.forEach { c ->
+        val mark = if (c.failed) "FAIL " else if (c.notChecked) "skip " else "ok   "
+        println("$mark${c.mod}: ${c.changed}  ${c.failure.orEmpty()}")
     }
-    checks.forEach { c -> println((if (c.failure == null) "ok   " else "FAIL ") + "${c.mod}: ${c.changed}  ${c.failure.orEmpty()}") }
-    val failed = checks.count { it.failure != null }
-    println(if (failed == 0) "All ${checks.size} edits apply" else "$failed of ${checks.size} edits do not apply")
+    val failed = checks.count { it.failed }
+    val skipped = checks.count { it.notChecked }
+    val applied = checks.size - failed - skipped
+    println(if (failed == 0) "All $applied edits apply ($skipped not checked)" else "$failed of ${checks.size} do not apply")
     if (failed > 0) exitProcess(1)
 }
 

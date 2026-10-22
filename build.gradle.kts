@@ -21,15 +21,20 @@ tasks.register<JavaExec>("packageMods") {
     args(projectDir.absolutePath, layout.buildDirectory.dir("mods").get().asFile.absolutePath)
 }
 
-// `./gradlew checkMods -Pdecoded=<dir>`: applies every mod's APK/JAR edits, in order, to a firmware decoded with
-// `apktool d` into <dir>/<component file name>/ (services.jar, framework.jar, …), without building anything.
+// `./gradlew checkMods -Pdecoded=<dir> [-Ptree=<work dir>]`: applies every mod's edits, in order, in memory, without
+// building anything: APK/JAR edits to a firmware decoded with `apktool d` into <dir>/<component file name>/
+// (services.jar, framework.jar, …), and file operations (copy, replace, delete, property and text patches) to an
+// assembled work tree (a folder per partition: run the Studio through Assemble, then use that workspace's work/).
 tasks.register<JavaExec>("checkMods") {
     group = "mods"
-    description = "Checks every mod's APK/JAR edits against a decoded firmware (-Pdecoded=<dir>)"
+    description = "Checks every mod's edits against a decoded firmware (-Pdecoded) and a work tree (-Ptree)"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("io.ltirom.mods.MainKt")
     val decoded = providers.gradleProperty("decoded")
-    argumentProviders.add(CommandLineArgumentProvider { listOf("check", projectDir.absolutePath, decoded.get()) })
+    val tree = providers.gradleProperty("tree")
+    argumentProviders.add(
+        CommandLineArgumentProvider { listOfNotNull("check", projectDir.absolutePath, decoded.get(), tree.orNull) },
+    )
 }
 
 // `./gradlew compileHooks -Pfirmware=<dir>`: compiles the Java hook classes under hooks/<mod>/<component>/<smali dir>/
